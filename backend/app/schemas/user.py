@@ -13,9 +13,23 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    city: Optional[str] = None
+    website: Optional[str] = None
+
 class UserResponse(UserBase):
     id: int
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    city: Optional[str] = None
+    website: Optional[str] = None
     created_at: datetime
+    recipes_count: int = 0
+    comments_count: int = 0
+    likes_received: int = 0
 
     class Config:
         from_attributes = True

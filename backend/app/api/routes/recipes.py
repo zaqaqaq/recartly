@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime
 import uuid
 import os
 import shutil
@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user, get_current_user_required
 from app.models.user import User
 from app.models.recipe import Recipe
-from app.models.like import Like
+from app.models.favorite import Favorite
 from app.models.comment import Comment
 from app.schemas.recipe import RecipeCreate, RecipeResponse
 from app.services.recipe_service import RecipeService
@@ -24,7 +24,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def format_time_ago(dt):
     """Форматирует дату в '2 часа назад', 'вчера' и т.д."""
     if dt.tzinfo is not None:
-        # Если дата с часовым поясом, преобразуем в UTC и делаем naive
         dt = dt.replace(tzinfo=None)
 
     now = datetime.utcnow()
@@ -81,11 +80,12 @@ def create_recipe(
 
     response = RecipeResponse.model_validate(recipe)
     response.total_price = total_price
-    response.likes_count = 0
+    response.favorites_count = 0
     response.comments_count = 0
     response.username = current_user.username
+    response.avatar_url = current_user.avatar_url
     response.time_ago = "только что"
-    response.user_liked = False
+    response.is_favorited = False
 
     return response
 
@@ -104,22 +104,45 @@ def get_recipes_list(
     for recipe in recipes:
         response = RecipeResponse.model_validate(recipe)
         response.total_price = RecipeService.calculate_total_price(recipe)
-        response.likes_count = db.query(Like).filter(Like.recipe_id == recipe.id).count()
+        response.favorites_count = db.query(Favorite).filter(Favorite.recipe_id == recipe.id).count()
         response.comments_count = db.query(Comment).filter(Comment.recipe_id == recipe.id).count()
 
         user = db.query(User).filter(User.id == recipe.user_id).first()
         response.username = user.username if user else "Пользователь"
+        response.avatar_url = user.avatar_url if user else None
         response.time_ago = format_time_ago(recipe.created_at)
 
         if current_user:
-            user_liked = db.query(Like).filter(
-                Like.recipe_id == recipe.id,
-                Like.user_id == current_user.id
+            is_favorited = db.query(Favorite).filter(
+                Favorite.recipe_id == recipe.id,
+                Favorite.user_id == current_user.id
             ).first() is not None
-            response.user_liked = user_liked
+            response.is_favorited = is_favorited
         else:
-            response.user_liked = False
+            response.is_favorited = False
 
+        result.append(response)
+
+    return result
+
+
+@router.get("/my", response_model=List[RecipeResponse])
+def get_my_recipes(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user_required)
+):
+    """Получить рецепты текущего пользователя"""
+    recipes = db.query(Recipe).filter(Recipe.user_id == current_user.id).order_by(Recipe.created_at.desc()).all()
+
+    result = []
+    for recipe in recipes:
+        response = RecipeResponse.model_validate(recipe)
+        response.total_price = RecipeService.calculate_total_price(recipe)
+        response.favorites_count = db.query(Favorite).filter(Favorite.recipe_id == recipe.id).count()
+        response.comments_count = db.query(Comment).filter(Comment.recipe_id == recipe.id).count()
+        response.username = current_user.username
+        response.avatar_url = current_user.avatar_url
+        response.time_ago = format_time_ago(recipe.created_at)
         result.append(response)
 
     return result
@@ -153,21 +176,22 @@ def search_recipes(
 
         response = RecipeResponse.model_validate(recipe)
         response.total_price = total_price
-        response.likes_count = db.query(Like).filter(Like.recipe_id == recipe.id).count()
+        response.favorites_count = db.query(Favorite).filter(Favorite.recipe_id == recipe.id).count()
         response.comments_count = db.query(Comment).filter(Comment.recipe_id == recipe.id).count()
 
         user = db.query(User).filter(User.id == recipe.user_id).first()
         response.username = user.username if user else "Пользователь"
+        response.avatar_url = user.avatar_url if user else None
         response.time_ago = format_time_ago(recipe.created_at)
 
         if current_user:
-            user_liked = db.query(Like).filter(
-                Like.recipe_id == recipe.id,
-                Like.user_id == current_user.id
+            is_favorited = db.query(Favorite).filter(
+                Favorite.recipe_id == recipe.id,
+                Favorite.user_id == current_user.id
             ).first() is not None
-            response.user_liked = user_liked
+            response.is_favorited = is_favorited
         else:
-            response.user_liked = False
+            response.is_favorited = False
 
         result.append(response)
 
@@ -187,21 +211,22 @@ def get_recipe(
 
     response = RecipeResponse.model_validate(recipe)
     response.total_price = RecipeService.calculate_total_price(recipe)
-    response.likes_count = db.query(Like).filter(Like.recipe_id == recipe.id).count()
+    response.favorites_count = db.query(Favorite).filter(Favorite.recipe_id == recipe.id).count()
     response.comments_count = db.query(Comment).filter(Comment.recipe_id == recipe.id).count()
 
     user = db.query(User).filter(User.id == recipe.user_id).first()
     response.username = user.username if user else "Пользователь"
+    response.avatar_url = user.avatar_url if user else None
     response.time_ago = format_time_ago(recipe.created_at)
 
     if current_user:
-        user_liked = db.query(Like).filter(
-            Like.recipe_id == recipe.id,
-            Like.user_id == current_user.id
+        is_favorited = db.query(Favorite).filter(
+            Favorite.recipe_id == recipe.id,
+            Favorite.user_id == current_user.id
         ).first() is not None
-        response.user_liked = user_liked
+        response.is_favorited = is_favorited
     else:
-        response.user_liked = False
+        response.is_favorited = False
 
     return response
 

@@ -7,6 +7,14 @@ import Register from './pages/Register';
 import CreateRecipe from './pages/CreateRecipe';
 import RecipePage from './pages/RecipePage';
 import SearchPage from './pages/SearchPage';
+import ProfilePage from './pages/ProfilePage';
+import MyRecipes from './pages/MyRecipes';
+import Favorites from './pages/Favorites';
+import SettingsPage from './pages/SettingsPage';
+import CartsPage from './pages/CartsPage';
+import CreateCart from './pages/CreateCart';
+import CartPage from './pages/CartPage';
+import MyCarts from './pages/MyCarts';
 
 function App() {
     const isAuthenticated = !!localStorage.getItem('access_token');
@@ -20,12 +28,20 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/search" element={<SearchPage />} />
                         <Route
                             path="/create"
                             element={isAuthenticated ? <CreateRecipe /> : <Navigate to="/login" />}
                         />
                         <Route path="/recipe/:id" element={<RecipePage />} />
-                        <Route path="/search" element={<SearchPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/my-recipes" element={<MyRecipes />} />
+                        <Route path="/favorites" element={<Favorites />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/carts" element={<CartsPage />} />
+                        <Route path="/create-cart" element={isAuthenticated ? <CreateCart /> : <Navigate to="/login" />} />
+                        <Route path="/cart/:id" element={<CartPage />} />
+                        <Route path="/my-carts" element={<MyCarts />} />
                     </Routes>
                 </div>
             </div>

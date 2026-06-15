@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRecipe, deleteRecipe, likeRecipe, unlikeRecipe, getComments, createComment, deleteComment } from '../services/api';
+import { getRecipe, deleteRecipe, addFavorite, removeFavorite, getFavorites, getComments, createComment, deleteComment } from '../services/api';
+
+function AvatarDisplay({ avatarUrl, username, size = "w-10 h-10 text-base" }) {
+    const getInitials = () => {
+        return username ? username[0].toUpperCase() : '?';
+    };
+
+    if (avatarUrl && avatarUrl.startsWith('emoji:')) {
+        const parts = avatarUrl.split(':');
+        const emoji = parts[1];
+        const bg = parts[2] || 'bg-green-100';
+        const textColor = parts[3] || 'text-green-600';
+        return (
+            <div className={`rounded-full ${bg} ${textColor} flex items-center justify-center ${size}`}>
+                {emoji}
+            </div>
+        );
+    } else if (avatarUrl) {
+        return (
+            <img
+                src={`http://localhost:8000${avatarUrl}`}
+                alt={username}
+                className={`rounded-full object-cover ${size}`}
+            />
+        );
+    }
+    return (
+        <div className={`rounded-full bg-green-200 text-green-700 flex items-center justify-center font-bold ${size}`}>
+            {getInitials()}
+        </div>
+    );
+}
 
 function RecipePage() {
     const { id } = useParams();
@@ -11,8 +42,8 @@ function RecipePage() {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
-    const [liked, setLiked] = useState(false);
-    const [likesCount, setLikesCount] = useState(0);
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [favoritesCount, setFavoritesCount] = useState(0);
     const [imgError, setImgError] = useState(false);
 
     const isAuthenticated = !!localStorage.getItem('access_token');
@@ -20,14 +51,14 @@ function RecipePage() {
     useEffect(() => {
         loadRecipe();
         loadComments();
+        loadFavoriteStatus();
     }, [id]);
 
     const loadRecipe = async () => {
         try {
             const data = await getRecipe(id);
             setRecipe(data);
-            setLikesCount(data.likes_count || 0);
-            setLiked(data.user_liked || false);
+            setFavoritesCount(data.favorites_count || 0);
         } catch (err) {
             setError('Рецепт не найден');
         } finally {
@@ -44,20 +75,31 @@ function RecipePage() {
         }
     };
 
-    const handleLike = async () => {
+    const loadFavoriteStatus = async () => {
+        if (!isAuthenticated) return;
+        try {
+            const favorites = await getFavorites();
+            const isFav = favorites.some(fav => fav.id === parseInt(id));
+            setIsFavorited(isFav);
+        } catch (err) {
+            console.error('Error loading favorite status:', err);
+        }
+    };
+
+    const handleFavorite = async () => {
         if (!isAuthenticated) {
             navigate('/login');
             return;
         }
         try {
-            if (liked) {
-                await unlikeRecipe(id);
-                setLiked(false);
-                setLikesCount(prev => prev - 1);
+            if (isFavorited) {
+                await removeFavorite(id);
+                setIsFavorited(false);
+                setFavoritesCount(prev => prev - 1);
             } else {
-                await likeRecipe(id);
-                setLiked(true);
-                setLikesCount(prev => prev + 1);
+                await addFavorite(id);
+                setIsFavorited(true);
+                setFavoritesCount(prev => prev + 1);
             }
         } catch (err) {
             console.error('Ошибка', err);
@@ -170,17 +212,19 @@ function RecipePage() {
 
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center text-green-700 font-bold">
-                                    {recipe.username?.[0]?.toUpperCase() || '?'}
-                                </div>
+                                <AvatarDisplay
+                                    avatarUrl={recipe.avatar_url}
+                                    username={recipe.username}
+                                    size="w-10 h-10 text-base"
+                                />
                                 <div>
                                     <p className="font-semibold text-gray-800">{recipe.username || 'Пользователь'}</p>
                                     <p className="text-xs text-gray-400">{recipe.time_ago || 'недавно'}</p>
                                 </div>
                             </div>
-                            <button onClick={handleLike} className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
-                                <span className="text-2xl">{liked ? '❤️' : '🤍'}</span>
-                                <span className="font-semibold">{likesCount}</span>
+                            <button onClick={handleFavorite} className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                                <span className="text-2xl">{isFavorited ? '❤️' : '🤍'}</span>
+                                <span className="font-semibold">{favoritesCount}</span>
                             </button>
                         </div>
 
@@ -253,9 +297,11 @@ function RecipePage() {
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <div className="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-xs font-bold text-green-700">
-                                                            {comment.username?.[0]?.toUpperCase() || '?'}
-                                                        </div>
+                                                        <AvatarDisplay
+                                                            avatarUrl={comment.avatar_url}
+                                                            username={comment.username}
+                                                            size="w-6 h-6 text-xs"
+                                                        />
                                                         <p className="font-semibold text-gray-800 text-sm">
                                                             {comment.username || `Пользователь ${comment.user_id}`}
                                                         </p>

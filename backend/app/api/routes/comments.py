@@ -53,6 +53,8 @@ def get_latest_comments(
                 "id": comment.id,
                 "text": comment.text,
                 "username": user.username if user else "Пользователь",
+                "avatar_url": user.avatar_url if user else None,
+                "user_id": comment.user_id,
                 "created_at": comment.created_at.isoformat() if comment.created_at else None,
                 "time_ago": get_time_ago(comment.created_at) if comment.created_at else "недавно"
             })
@@ -90,7 +92,8 @@ def create_comment(
         "user_id": new_comment.user_id,
         "recipe_id": new_comment.recipe_id,
         "created_at": new_comment.created_at,
-        "username": current_user.username
+        "username": current_user.username,
+        "avatar_url": current_user.avatar_url
     }
 
 
@@ -114,7 +117,8 @@ def get_comments(
             "user_id": comment.user_id,
             "recipe_id": comment.recipe_id,
             "created_at": comment.created_at,
-            "username": user.username if user else None
+            "username": user.username if user else None,
+            "avatar_url": user.avatar_url if user else None
         })
 
     return result

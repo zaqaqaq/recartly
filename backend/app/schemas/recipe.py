@@ -33,13 +33,14 @@ class RecipeResponse(RecipeBase):
     updated_at: Optional[datetime] = None
     ingredients: List[IngredientResponse] = []
     total_price: Optional[float] = None
-    likes_count: int = 0
+    favorites_count: int = 0
     comments_count: int = 0
     username: Optional[str] = None
+    avatar_url: Optional[str] = None
     time_ago: Optional[str] = None
     tags: List[str] = []
     photo_url: Optional[str] = None
-    user_liked: bool = False
+    is_favorited: bool = False
 
     class Config:
         from_attributes = True
