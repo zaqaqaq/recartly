@@ -1,0 +1,7 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"ввод неверных данных","1348","test_negative_data_auth","tests","2026-08-11","passed","2026-08-11","","test_auth","",""
+"проверка входа и выхода из системы","1969","test_logout","tests","2026-08-11","passed","2026-08-11","","test_auth","",""
+"Вход с валидными данными","1323","test_positiv_auth","tests","2026-08-11","passed","2026-08-11","","test_auth","",""
+"Проверка открытия главной страницы","20","test_main_opens","tests","2026-08-11","passed","2026-08-11","","test_main","",""
+"Регистрация пользователя","1977","test_registration_positive","tests","2026-08-11","passed","2026-08-11","","test_auth","",""
+"Проверка кнопки войти","355","test_auth_main","tests","2026-08-11","passed","2026-08-11","","test_main","",""
