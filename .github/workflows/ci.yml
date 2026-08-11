@@ -26,7 +26,8 @@ jobs:
           playwright install --with-deps chromium
 
       - name: Start Recartly (Docker Compose)
-        run: docker-compose up -d app db
+        run: |
+          docker compose up -d app db
 
       - name: Wait for app
         run: sleep 10
