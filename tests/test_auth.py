@@ -18,6 +18,8 @@ def test_positiv_auth(page):
     page.fill('.input','1@test.ru')
     page.fill('input[type="password"]','1234567')
     page.click('.btn-primary')
+    # Ждем, пока URL станет главной страницей
+    page.wait_for_url("http://localhost:3000/", timeout=5000)
     assert page.url == "http://localhost:3000/"
 
 def test_logout(page):
