@@ -18,6 +18,8 @@ function Login() {
             const response = await login(email, password);
             if (response && response.access_token) {
                 localStorage.setItem('access_token', response.access_token);
+                window.dispatchEvent(new Event('authChange'));
+                window.dispatchEvent(new Event('storage'));
                 navigate('/');
             } else {
                 setError('Неверный ответ от сервера');
@@ -35,45 +37,45 @@ function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4">
-            <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4">
+            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-card p-8">
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full mb-4">
                         <span className="text-3xl">🍲</span>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">Добро пожаловать!</h2>
-                    <p className="text-gray-500 mt-1">Войдите в свой аккаунт Recartly</p>
+                    <h2 className="heading-2">Добро пожаловать!</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Войдите в свой аккаунт Recartly</p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl mb-4 text-sm">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-semibold mb-2">
+                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                             Email
                         </label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="input"
                             required
                         />
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-semibold mb-2">
+                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
                             Пароль
                         </label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="input"
                             required
                         />
                     </div>
@@ -81,14 +83,14 @@ function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                        className="btn-primary w-full"
                     >
                         {loading ? 'Вход...' : 'Войти'}
                     </button>
                 </form>
 
-                <p className="text-center text-gray-600 mt-6 text-sm">
-                    Нет аккаунта? <Link to="/register" className="text-green-600 hover:underline font-semibold">Зарегистрируйтесь</Link>
+                <p className="text-center text-gray-600 dark:text-gray-400 mt-6 text-sm">
+                    Нет аккаунта? <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:underline font-semibold">Зарегистрируйтесь</Link>
                 </p>
             </div>
         </div>

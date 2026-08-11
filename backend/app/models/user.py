@@ -25,3 +25,6 @@ class User(Base):
     carts = relationship("ShoppingCart", back_populates="user", cascade="all, delete-orphan")
     cart_comments = relationship("CartComment", back_populates="user", cascade="all, delete-orphan")
     cart_likes = relationship("CartLike", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    review_likes = relationship("ReviewLike", back_populates="user", cascade="all, delete-orphan")
+    review_comments = relationship("ReviewComment", back_populates="user", cascade="all, delete-orphan")

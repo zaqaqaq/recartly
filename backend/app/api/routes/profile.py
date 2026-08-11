@@ -12,6 +12,7 @@ from app.models.comment import Comment
 from app.models.favorite import Favorite
 from app.schemas.user import UserResponse, UserUpdate
 from app.schemas.achievement import AchievementResponse
+from app.core.security import verify_password, get_password_hash
 
 router = APIRouter(prefix="/profile", tags=["Профиль"])
 
@@ -29,7 +30,6 @@ def get_my_profile(
     recipes_count = db.query(Recipe).filter(Recipe.user_id == current_user.id).count()
     comments_count = db.query(Comment).filter(Comment.user_id == current_user.id).count()
 
-    # Считаем количество избранных (лайков) на рецептах пользователя
     favorites_received = 0
     for recipe in current_user.recipes:
         favorites_received += db.query(Favorite).filter(Favorite.recipe_id == recipe.id).count()
@@ -137,3 +137,28 @@ def get_user_profile(
     response.likes_received = favorites_received
 
     return response
+
+
+@router.post("/change-password")
+def change_password(
+        password_data: dict,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user_required)
+):
+    """Смена пароля"""
+    old_password = password_data.get("old_password")
+    new_password = password_data.get("new_password")
+
+    if not old_password or not new_password:
+        raise HTTPException(status_code=400, detail="Все поля обязательны")
+
+    if not verify_password(old_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Неверный текущий пароль")
+
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Новый пароль должен содержать минимум 6 символов")
+
+    current_user.hashed_password = get_password_hash(new_password)
+    db.commit()
+
+    return {"message": "Пароль успешно изменён"}

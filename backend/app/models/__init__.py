@@ -5,3 +5,4 @@ from app.models.comment import Comment
 from app.models.favorite import Favorite
 from app.models.achievement import Achievement
 from app.models.cart import ShoppingCart, CartItem, CartComment, CartLike
+from app.models.review import Review, ReviewLike, ReviewComment

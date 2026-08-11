@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getRecipes, addFavorite, removeFavorite, getFavorites, getLatestComments, getCarts, likeCart, unlikeCart } from '../services/api';
+import { getRecipes, addFavorite, removeFavorite, getFavorites, getLatestComments, getCarts, likeCart, unlikeCart, getReviews } from '../services/api';
 import { getShopStyle } from '../utils/shopColors';
+import ReviewCard from '../components/ReviewCard';
+import SkeletonCard from '../components/SkeletonCard';
 
 function Home() {
-    const [activeTab, setActiveTab] = useState('recipes'); // 'recipes' or 'carts'
+    const [activeTab, setActiveTab] = useState('recipes');
     const [recipes, setRecipes] = useState([]);
     const [carts, setCarts] = useState([]);
+    const [reviews, setReviews] = useState([]);
     const [popularRecipes, setPopularRecipes] = useState([]);
     const [latestComments, setLatestComments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,18 +18,18 @@ function Home() {
     const loadData = async () => {
         setLoading(true);
         try {
-            // Загружаем рецепты
             const recipesData = await getRecipes();
             setRecipes(recipesData || []);
 
-            // Загружаем корзины
             const cartsData = await getCarts();
             setCarts(cartsData || []);
+
+            const reviewsData = await getReviews();
+            setReviews(reviewsData || []);
 
             const sortedByLikes = [...(recipesData || [])].sort((a, b) => (b.favorites_count || 0) - (a.favorites_count || 0));
             setPopularRecipes(sortedByLikes.slice(0, 5));
 
-            // Загружаем избранное
             try {
                 const favoritesData = await getFavorites();
                 const favSet = new Set(favoritesData.map(fav => fav.id));
@@ -83,88 +86,135 @@ function Home() {
         ));
     };
 
+    const handleReviewLikeUpdate = async (reviewId, isLiked) => {
+        setReviews(prev => prev.map(review =>
+            review.id === reviewId
+                ? { ...review, likes_count: (review.likes_count || 0) + (isLiked ? 1 : -1), is_liked: isLiked }
+                : review
+        ));
+    };
+
     if (loading) {
         return (
-            <div className="text-center py-10">
-                <p className="text-gray-600">Загрузка...</p>
+            <div className="space-y-4 animate-fade-in">
+                {[1, 2, 3].map((i) => (
+                    <SkeletonCard key={i} type="recipe" />
+                ))}
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 py-6 animate-fade-in">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 border-l-4 border-green-500 pl-4">
+                <h1 className="heading-1 border-l-4 border-primary-500 pl-4">
                     Recartly
                 </h1>
-                <p className="text-gray-500 mt-2 ml-4">Готовьте с умом, экономьте с нами</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 ml-4">Готовьте с умом, экономьте с нами</p>
             </div>
 
-            {/* Вкладки */}
-            <div className="flex gap-2 border-b border-gray-200 mb-6">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 mb-6">
                 <button
                     onClick={() => setActiveTab('recipes')}
-                    className={`px-6 py-2 text-lg font-medium transition-colors ${
+                    className={`px-6 py-2 text-lg font-medium transition-all ${
                         activeTab === 'recipes'
-                            ? 'text-green-600 border-b-2 border-green-600'
-                            : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-primary-600 border-b-2 border-primary-500'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                     }`}
                 >
                     📝 Рецепты
                 </button>
                 <button
                     onClick={() => setActiveTab('carts')}
-                    className={`px-6 py-2 text-lg font-medium transition-colors ${
+                    className={`px-6 py-2 text-lg font-medium transition-all ${
                         activeTab === 'carts'
-                            ? 'text-green-600 border-b-2 border-green-600'
-                            : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-primary-600 border-b-2 border-primary-500'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                     }`}
                 >
                     🛒 Корзины
+                </button>
+                <button
+                    onClick={() => setActiveTab('reviews')}
+                    className={`px-6 py-2 text-lg font-medium transition-all ${
+                        activeTab === 'reviews'
+                            ? 'text-primary-600 border-b-2 border-primary-500'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    }`}
+                >
+                    ⭐ Отзывы
                 </button>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex-1">
-                    {activeTab === 'recipes' ? (
+                    {activeTab === 'recipes' && (
                         <>
                             {recipes.length === 0 ? (
-                                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-500">Пока нет рецептов. Будьте первым!</p>
-                                    <Link to="/create" className="mt-4 inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                                <div className="card p-8 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">Пока нет рецептов. Будьте первым!</p>
+                                    <Link to="/create" className="btn-primary inline-block">
                                         Создать рецепт
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
-                                    {recipes.map((recipe) => (
-                                        <RecipeCard
-                                            key={recipe.id}
-                                            recipe={recipe}
-                                            isFavorited={favorites.has(recipe.id)}
-                                            onFavoriteUpdate={handleFavoriteUpdate}
-                                        />
+                                <div className="space-y-4">
+                                    {recipes.map((recipe, index) => (
+                                        <div key={recipe.id} className={`animate-fade-in-up delay-${(index % 5) * 100}`}>
+                                            <RecipeCard
+                                                recipe={recipe}
+                                                isFavorited={favorites.has(recipe.id)}
+                                                onFavoriteUpdate={handleFavoriteUpdate}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
                             )}
                         </>
-                    ) : (
+                    )}
+
+                    {activeTab === 'carts' && (
                         <>
                             {carts.length === 0 ? (
-                                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-500">Пока нет корзин. Будьте первым!</p>
-                                    <Link to="/create-cart" className="mt-4 inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                                <div className="card p-8 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">Пока нет корзин. Будьте первым!</p>
+                                    <Link to="/create-cart" className="btn-primary inline-block">
                                         Создать корзину
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
-                                    {carts.map((cart) => (
-                                        <CartCard
-                                            key={cart.id}
-                                            cart={cart}
-                                            onLikeUpdate={handleCartLikeUpdate}
-                                        />
+                                <div className="space-y-4">
+                                    {carts.map((cart, index) => (
+                                        <div key={cart.id} className={`animate-fade-in-up delay-${(index % 5) * 100}`}>
+                                            <CartCard
+                                                cart={cart}
+                                                onLikeUpdate={handleCartLikeUpdate}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === 'reviews' && (
+                        <>
+                            {reviews.length === 0 ? (
+                                <div className="card p-8 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">Пока нет отзывов. Будьте первым!</p>
+                                    <Link to="/create-review" className="btn-primary inline-block">
+                                        Создать отзыв
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {reviews.map((review, index) => (
+                                        <div key={review.id} className={`animate-fade-in-up delay-${(index % 5) * 100}`}>
+                                            <ReviewCard
+                                                review={review}
+                                                onLikeUpdate={handleReviewLikeUpdate}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -173,30 +223,32 @@ function Home() {
                 </div>
 
                 <div className="lg:w-80 space-y-6">
-                    <SidebarSection title="Популярное">
+                    <SidebarSection title="🔥 Популярное">
                         {popularRecipes.map((recipe) => (
                             <PopularItem key={recipe.id} recipe={recipe} onFavoriteUpdate={handleFavoriteUpdate} />
                         ))}
                     </SidebarSection>
 
-                    <SidebarSection title="Актуальные акции в магазинах">
+                    <SidebarSection title="🏷️ Актуальные акции">
                         {['Пятёрочка', 'Магнит', 'Лента', 'Перекрёсток', 'Озон'].map((shop, idx) => (
-                            <div key={idx} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
-                                <span className="font-medium text-gray-700">{shop}</span>
-                                <span className="text-green-600 font-semibold text-sm">Скидки</span>
+                            <div key={idx} className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{shop}</span>
+                                <span className="text-primary-500 font-semibold text-sm">Скидки</span>
                             </div>
                         ))}
                     </SidebarSection>
 
-                    <SidebarSection title="Последние комментарии">
+                    <SidebarSection title="💬 Последние комментарии">
                         {latestComments.slice(0, 4).map((comment, idx) => (
-                            <div key={idx} className="border-b border-gray-100 pb-2">
+                            <div key={idx} className="border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0">
                                 <div className="flex items-center gap-2">
-                                    <AvatarDisplay avatarUrl={comment.avatar_url} username={comment.username} size="w-6 h-6 text-xs" />
-                                    <p className="font-semibold text-sm text-gray-800">{comment.username}</p>
+                                    <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-xs text-primary-600">
+                                        {comment.username?.[0]?.toUpperCase() || '?'}
+                                    </div>
+                                    <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">{comment.username}</p>
                                 </div>
-                                <p className="text-gray-600 text-sm line-clamp-2 mt-1">{comment.text}</p>
-                                <p className="text-xs text-gray-400 mt-1">{comment.time_ago || 'только что'}</p>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mt-1">{comment.text}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{comment.time_ago || 'только что'}</p>
                             </div>
                         ))}
                     </SidebarSection>
@@ -206,6 +258,8 @@ function Home() {
     );
 }
 
+// ===== Компоненты =====
+
 function AvatarDisplay({ avatarUrl, username, size = "w-10 h-10 text-base" }) {
     const getInitials = () => {
         return username ? username[0].toUpperCase() : '?';
@@ -214,10 +268,10 @@ function AvatarDisplay({ avatarUrl, username, size = "w-10 h-10 text-base" }) {
     if (avatarUrl && avatarUrl.startsWith('emoji:')) {
         const parts = avatarUrl.split(':');
         const emoji = parts[1];
-        const bg = parts[2] || 'bg-green-100';
-        const textColor = parts[3] || 'text-green-600';
+        const bg = parts[2] || 'bg-primary-100';
+        const textColor = parts[3] || 'text-primary-600';
         return (
-            <div className={`rounded-full ${bg} ${textColor} flex items-center justify-center ${size}`}>
+            <div className={`${size} rounded-full ${bg} ${textColor} flex items-center justify-center avatar`}>
                 {emoji}
             </div>
         );
@@ -226,12 +280,12 @@ function AvatarDisplay({ avatarUrl, username, size = "w-10 h-10 text-base" }) {
             <img
                 src={`http://localhost:8000${avatarUrl}`}
                 alt={username}
-                className={`rounded-full object-cover ${size}`}
+                className={`${size} rounded-full object-cover`}
             />
         );
     }
     return (
-        <div className={`rounded-full bg-green-200 text-green-700 flex items-center justify-center font-bold ${size}`}>
+        <div className={`${size} rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold avatar`}>
             {getInitials()}
         </div>
     );
@@ -249,10 +303,8 @@ function RecipeCard({ recipe, isFavorited, onFavoriteUpdate }) {
             window.location.href = '/login';
             return;
         }
-
         if (isProcessing) return;
         setIsProcessing(true);
-
         try {
             if (favorited) {
                 await removeFavorite(recipe.id);
@@ -277,9 +329,9 @@ function RecipeCard({ recipe, isFavorited, onFavoriteUpdate }) {
         : null;
 
     return (
-        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100">
+        <div className="card card-hover overflow-hidden">
             <div className="flex flex-col md:flex-row p-4 gap-4">
-                <div className="md:w-40 h-40 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                <div className="md:w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden flex-shrink-0">
                     {photoUrl ? (
                         <img
                             src={photoUrl}
@@ -288,7 +340,7 @@ function RecipeCard({ recipe, isFavorited, onFavoriteUpdate }) {
                             onError={() => setImgError(true)}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
+                        <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500">
                             🍲
                         </div>
                     )}
@@ -296,48 +348,47 @@ function RecipeCard({ recipe, isFavorited, onFavoriteUpdate }) {
 
                 <div className="flex-1">
                     <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                             <AvatarDisplay
                                 avatarUrl={recipe.avatar_url}
                                 username={recipe.username}
-                                size="w-10 h-10 text-base"
                             />
                             <div>
-                                <p className="font-semibold text-gray-800">{recipe.username || 'Пользователь'}</p>
-                                <p className="text-xs text-gray-400">{recipe.time_ago || 'недавно'}</p>
+                                <p className="font-semibold text-gray-900 dark:text-white">{recipe.username || 'Пользователь'}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{recipe.time_ago || 'недавно'}</p>
                             </div>
                         </div>
                         {recipe.total_price && (
-                            <div className="bg-green-100 px-3 py-1 rounded-full">
-                                <span className="text-green-700 font-bold text-sm">{recipe.total_price} ₽</span>
+                            <div className="bg-primary-100 dark:bg-primary-900/30 px-3 py-1 rounded-full">
+                                <span className="text-primary-700 dark:text-primary-400 font-bold text-sm">{recipe.total_price} ₽</span>
                             </div>
                         )}
                     </div>
 
                     <Link to={`/recipe/${recipe.id}`}>
-                        <h2 className="text-xl font-bold text-gray-800 mt-3 hover:text-green-600 transition-colors">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-3 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                             {recipe.title}
                         </h2>
                     </Link>
 
                     {recipe.description && (
-                        <p className="text-gray-600 mt-2 line-clamp-2">{recipe.description}</p>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{recipe.description}</p>
                     )}
 
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
                         <button
                             onClick={handleFavorite}
                             disabled={isProcessing}
                             className="flex items-center gap-1 text-sm hover:opacity-75 transition-opacity"
                         >
-                            <span className={favorited ? 'text-red-500' : 'text-gray-500'}>
+                            <span className={favorited ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}>
                                 {favorited ? '❤️' : '🤍'}
                             </span>
-                            <span>{favoritesCount}</span>
+                            <span className="text-gray-600 dark:text-gray-400">{favoritesCount}</span>
                         </button>
                         <Link
                             to={`/recipe/${recipe.id}`}
-                            className="text-green-600 font-medium hover:text-green-700 text-sm"
+                            className="text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 dark:hover:text-primary-300 text-sm"
                         >
                             Подробнее →
                         </Link>
@@ -360,10 +411,8 @@ function CartCard({ cart, onLikeUpdate }) {
             window.location.href = '/login';
             return;
         }
-
         if (isProcessing) return;
         setIsProcessing(true);
-
         try {
             if (isLiked) {
                 await unlikeCart(cart.id);
@@ -384,46 +433,44 @@ function CartCard({ cart, onLikeUpdate }) {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100">
-            <div className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${shopStyle.bgColor} ${shopStyle.textColor}`}>
-                        <span>{shopStyle.emoji}</span>
-                        <span className="text-sm font-medium">{cart.shop_name || 'Магазин не указан'}</span>
-                    </div>
-                    <div className="text-green-600 font-bold text-lg">{cart.total_price || 0} ₽</div>
+        <div className="card card-hover p-5">
+            <div className="flex items-center justify-between mb-3">
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${shopStyle.bgColor} ${shopStyle.textColor}`}>
+                    <span>{shopStyle.emoji}</span>
+                    <span className="text-sm font-medium">{cart.shop_name || 'Магазин не указан'}</span>
                 </div>
+                <div className="text-primary-600 dark:text-primary-400 font-bold text-lg">{cart.total_price || 0} ₽</div>
+            </div>
 
-                <Link to={`/cart/${cart.id}`}>
-                    <h2 className="text-xl font-bold text-gray-800 mb-2 hover:text-green-600 transition-colors">
-                        {cart.title}
-                    </h2>
-                </Link>
+            <Link to={`/cart/${cart.id}`}>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                    {cart.title}
+                </h2>
+            </Link>
 
-                {cart.description && (
-                    <p className="text-gray-500 text-sm line-clamp-2 mb-3">{cart.description}</p>
-                )}
+            {cart.description && (
+                <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-3">{cart.description}</p>
+            )}
 
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                        <AvatarDisplay
-                            avatarUrl={cart.avatar_url}
-                            username={cart.username}
-                            size="w-8 h-8 text-sm"
-                        />
-                        <span className="text-sm text-gray-600">{cart.username}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <button onClick={handleLike} disabled={isProcessing} className="flex items-center gap-1">
-                            <span className={isLiked ? 'text-red-500' : 'text-gray-400'}>
-                                {isLiked ? '❤️' : '🤍'}
-                            </span>
-                            <span>{likesCount}</span>
-                        </button>
-                        <Link to={`/cart/${cart.id}`} className="text-green-600 hover:text-green-700">
-                            Подробнее →
-                        </Link>
-                    </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                    <AvatarDisplay
+                        avatarUrl={cart.avatar_url}
+                        username={cart.username}
+                        size="w-8 h-8 text-sm"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{cart.username}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                    <button onClick={handleLike} disabled={isProcessing} className="flex items-center gap-1">
+                        <span className={isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}>
+                            {isLiked ? '❤️' : '🤍'}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">{likesCount}</span>
+                    </button>
+                    <Link to={`/cart/${cart.id}`} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                        Подробнее →
+                    </Link>
                 </div>
             </div>
         </div>
@@ -432,8 +479,8 @@ function CartCard({ cart, onLikeUpdate }) {
 
 function SidebarSection({ title, children }) {
     return (
-        <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100">
-            <h3 className="font-bold text-lg text-gray-800 mb-4 pb-2 border-b-2 border-green-500 inline-block">
+        <div className="card p-5">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 pb-2 border-b-2 border-primary-500 inline-block">
                 {title}
             </h3>
             {children}
@@ -471,12 +518,12 @@ function PopularItem({ recipe, onFavoriteUpdate }) {
     };
 
     return (
-        <Link to={`/recipe/${recipe.id}`} className="block hover:bg-gray-50 rounded-lg p-2 transition-colors">
+        <Link to={`/recipe/${recipe.id}`} className="block hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl p-2 transition-colors">
             <div className="flex justify-between items-start">
                 <div className="flex-1">
-                    <p className="font-semibold text-gray-800 text-sm">{recipe.username || 'Пользователь'}</p>
-                    <p className="text-gray-700 text-sm line-clamp-1">{recipe.title}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                    <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{recipe.username || 'Пользователь'}</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm line-clamp-1">{recipe.title}</p>
+                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
                         <button onClick={handleFavorite} className="flex items-center gap-1">
                             <span>{favorited ? '❤️' : '🤍'}</span>
                             <span>{favoritesCount}</span>
@@ -485,7 +532,7 @@ function PopularItem({ recipe, onFavoriteUpdate }) {
                     </div>
                 </div>
                 {recipe.total_price && (
-                    <span className="text-green-600 font-bold text-sm">{recipe.total_price} ₽</span>
+                    <span className="text-primary-600 dark:text-primary-400 font-bold text-sm">{recipe.total_price} ₽</span>
                 )}
             </div>
         </Link>

@@ -91,7 +91,7 @@ export const uploadPhoto = (formData) =>
 export const getMyRecipes = () =>
     request('/recipes/my', 'GET', null, true);
 
-// ========== ИЗБРАННОЕ (для рецептов) ==========
+// ========== ИЗБРАННОЕ ==========
 export const addFavorite = (recipeId) =>
     request(`/favorites/${recipeId}`, 'POST', null, true);
 
@@ -127,6 +127,10 @@ export const getUserProfile = (userId) =>
 export const uploadAvatar = (formData) =>
     request('/profile/upload-avatar', 'POST', formData, true, true);
 
+// ========== НАСТРОЙКИ ==========
+export const updatePassword = (data) =>
+    request('/profile/change-password', 'POST', data, true);
+
 // ========== КОРЗИНЫ ==========
 export const getCarts = (skip = 0, limit = 20) =>
     request(`/carts?skip=${skip}&limit=${limit}`, 'GET');
@@ -157,6 +161,37 @@ export const createCartComment = (cartId, text) =>
 
 export const deleteCartComment = (cartId, commentId) =>
     request(`/carts/${cartId}/comments/${commentId}`, 'DELETE', null, true);
+
+// ========== ОТЗЫВЫ ==========
+export const getReviews = (skip = 0, limit = 20, targetType = null) => {
+    let url = `/reviews?skip=${skip}&limit=${limit}`;
+    if (targetType) url += `&target_type=${targetType}`;
+    return request(url, 'GET');
+};
+
+export const getReview = (id) =>
+    request(`/reviews/${id}`, 'GET');
+
+export const createReview = (reviewData) =>
+    request('/reviews/', 'POST', reviewData, true);
+
+export const deleteReview = (id) =>
+    request(`/reviews/${id}`, 'DELETE', null, true);
+
+export const likeReview = (reviewId) =>
+    request(`/reviews/${reviewId}/like`, 'POST', null, true);
+
+export const unlikeReview = (reviewId) =>
+    request(`/reviews/${reviewId}/like`, 'DELETE', null, true);
+
+export const getReviewComments = (reviewId, skip = 0, limit = 50) =>
+    request(`/reviews/${reviewId}/comments?skip=${skip}&limit=${limit}`, 'GET');
+
+export const createReviewComment = (reviewId, text) =>
+    request(`/reviews/${reviewId}/comments`, 'POST', { text }, true);
+
+export const deleteReviewComment = (reviewId, commentId) =>
+    request(`/reviews/${reviewId}/comments/${commentId}`, 'DELETE', null, true);
 
 // ========== ДОСТИЖЕНИЯ ==========
 export const getMyAchievements = () =>

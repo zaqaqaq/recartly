@@ -1,36 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyProfile, updateProfile, uploadAvatar } from '../services/api';
-
-const PRESET_AVATARS = [
-    { emoji: '🍲', bg: 'bg-green-100', textColor: 'text-green-600' },
-    { emoji: '👨‍🍳', bg: 'bg-blue-100', textColor: 'text-blue-600' },
-    { emoji: '👩‍🍳', bg: 'bg-pink-100', textColor: 'text-pink-600' },
-    { emoji: '🍕', bg: 'bg-orange-100', textColor: 'text-orange-600' },
-    { emoji: '🥗', bg: 'bg-emerald-100', textColor: 'text-emerald-600' },
-    { emoji: '🍰', bg: 'bg-rose-100', textColor: 'text-rose-600' },
-    { emoji: '🐱', bg: 'bg-yellow-100', textColor: 'text-yellow-600' },
-    { emoji: '🐶', bg: 'bg-amber-100', textColor: 'text-amber-600' },
-    { emoji: '⭐', bg: 'bg-purple-100', textColor: 'text-purple-600' },
-    { emoji: '❤️', bg: 'bg-red-100', textColor: 'text-red-600' },
-    { emoji: '👍', bg: 'bg-indigo-100', textColor: 'text-indigo-600' },
-    { emoji: '😋', bg: 'bg-teal-100', textColor: 'text-teal-600' },
-];
+import { getMyProfile, updatePassword } from '../services/api';
 
 function SettingsPage() {
     const navigate = useNavigate();
-    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        bio: '',
-        city: '',
-        website: ''
+    const [profile, setProfile] = useState(null);
+
+    // Смена пароля
+    const [passwordData, setPasswordData] = useState({
+        old_password: '',
+        new_password: '',
+        confirm_password: ''
     });
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    const [passwordLoading, setPasswordLoading] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -40,22 +25,6 @@ function SettingsPage() {
         try {
             const data = await getMyProfile();
             setProfile(data);
-            setFormData({
-                username: data.username || '',
-                email: data.email || '',
-                bio: data.bio || '',
-                city: data.city || '',
-                website: data.website || ''
-            });
-            // Обновляем localStorage
-            localStorage.setItem('username', data.username);
-            if (data.avatar_url) {
-                localStorage.setItem('avatar_url', data.avatar_url);
-            } else {
-                localStorage.removeItem('avatar_url');
-            }
-            // Триггерим событие для обновления Navbar
-            window.dispatchEvent(new Event('storage'));
         } catch (err) {
             console.error('Ошибка загрузки профиля:', err);
         } finally {
@@ -63,275 +32,170 @@ function SettingsPage() {
         }
     };
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
+    const handlePasswordChange = (e) => {
+        setPasswordData({
+            ...passwordData,
             [e.target.name]: e.target.value
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccess('');
+        setPasswordError('');
+        setPasswordSuccess('');
 
-        try {
-            const updateData = {
-                username: formData.username,
-                bio: formData.bio,
-                city: formData.city,
-                website: formData.website
-            };
-            const updated = await updateProfile(updateData);
-            setProfile(updated);
-            localStorage.setItem('username', updated.username);
-            setSuccess('Настройки сохранены!');
-            setTimeout(() => setSuccess(''), 3000);
-            window.dispatchEvent(new Event('storage'));
-        } catch (err) {
-            setError('Ошибка сохранения');
-        }
-    };
-
-    const handleSelectPreset = async (preset) => {
-        const avatarValue = `emoji:${preset.emoji}:${preset.bg}:${preset.textColor}`;
-        setUploading(true);
-        setError('');
-
-        try {
-            await updateProfile({ avatar_url: avatarValue });
-            localStorage.setItem('avatar_url', avatarValue);
-            setSuccess('Аватарка обновлена!');
-            setTimeout(() => setSuccess(''), 2000);
-            await loadProfile(); // Перезагружаем профиль
-        } catch (err) {
-            setError('Ошибка сохранения аватарки');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-            setError('Можно загружать только изображения');
+        if (passwordData.new_password !== passwordData.confirm_password) {
+            setPasswordError('Пароли не совпадают');
             return;
         }
 
-        if (file.size > 2 * 1024 * 1024) {
-            setError('Файл не должен превышать 2MB');
+        if (passwordData.new_password.length < 6) {
+            setPasswordError('Новый пароль должен содержать минимум 6 символов');
             return;
         }
 
-        const formDataPhoto = new FormData();
-        formDataPhoto.append('file', file);
-
-        setUploading(true);
-        setError('');
+        setPasswordLoading(true);
 
         try {
-            const response = await uploadAvatar(formDataPhoto);
-            await updateProfile({ avatar_url: response.avatar_url });
-            localStorage.setItem('avatar_url', response.avatar_url);
-            setSuccess('Фото загружено!');
-            setTimeout(() => setSuccess(''), 2000);
-            await loadProfile(); // Перезагружаем профиль
+            await updatePassword({
+                old_password: passwordData.old_password,
+                new_password: passwordData.new_password
+            });
+            setPasswordSuccess('Пароль успешно изменён!');
+            setPasswordData({
+                old_password: '',
+                new_password: '',
+                confirm_password: ''
+            });
+            setTimeout(() => setPasswordSuccess(''), 3000);
         } catch (err) {
-            setError('Ошибка загрузки фото');
+            setPasswordError(err.response?.data?.detail || 'Ошибка смены пароля');
         } finally {
-            setUploading(false);
-        }
-    };
-
-    const getCurrentAvatarDisplay = () => {
-        if (!profile) return null;
-
-        if (profile.avatar_url && profile.avatar_url.startsWith('emoji:')) {
-            const parts = profile.avatar_url.split(':');
-            const emoji = parts[1];
-            const bg = parts[2] || 'bg-green-100';
-            const textColor = parts[3] || 'text-green-600';
-            return (
-                <div className={`w-20 h-20 rounded-full ${bg} flex items-center justify-center text-3xl ${textColor}`}>
-                    {emoji}
-                </div>
-            );
-        } else if (profile.avatar_url) {
-            return (
-                <img
-                    src={`http://localhost:8000${profile.avatar_url}`}
-                    alt="Avatar"
-                    className="w-20 h-20 rounded-full object-cover"
-                />
-            );
-        } else {
-            return (
-                <div className="w-20 h-20 bg-green-200 rounded-full flex items-center justify-center text-2xl font-bold text-green-700">
-                    {profile.username?.[0]?.toUpperCase() || '?'}
-                </div>
-            );
+            setPasswordLoading(false);
         }
     };
 
     if (loading) {
         return (
             <div className="text-center py-10">
-                <p className="text-gray-600">Загрузка...</p>
+                <p className="text-gray-600 dark:text-gray-400">Загрузка...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
             <div className="max-w-2xl mx-auto">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 border-l-4 border-green-500 pl-4">
-                        ⚙️ Настройки профиля
+                    <h1 className="heading-2 border-l-4 border-primary-500 pl-4">
+                        ⚙️ Настройки
                     </h1>
-                    <p className="text-gray-500 mt-2 ml-4">Управляйте информацией о себе и аватаркой</p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2 ml-4">Управление аккаунтом и безопасностью</p>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">🖼️ Моя аватарка</h2>
-                    <div className="flex flex-col items-center mb-4">
-                        {getCurrentAvatarDisplay()}
-                        <p className="text-sm text-gray-500 mt-2">{profile?.username}</p>
-                    </div>
+                {/* Смена пароля */}
+                <div className="card p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        🔑 Смена пароля
+                    </h2>
 
-                    <div className="mb-4">
-                        <h3 className="text-md font-medium text-gray-700 mb-2">Загрузить своё фото</h3>
-                        <div className="flex items-center gap-4">
-                            <label className="cursor-pointer bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                {uploading ? 'Загрузка...' : '📷 Выбрать фото'}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileUpload}
-                                    disabled={uploading}
-                                    className="hidden"
-                                />
-                            </label>
-                            <p className="text-sm text-gray-500">JPG, PNG до 2MB</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 className="text-md font-medium text-gray-700 mb-2">Выбрать иконку</h3>
-                        <div className="grid grid-cols-6 gap-3">
-                            {PRESET_AVATARS.map((preset, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => handleSelectPreset(preset)}
-                                    disabled={uploading}
-                                    className={`w-12 h-12 rounded-full ${preset.bg} ${preset.textColor} flex items-center justify-center text-xl hover:scale-110 transition-transform disabled:opacity-50`}
-                                >
-                                    {preset.emoji}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-md p-6">
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
-                            {error}
+                    {passwordError && (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm mb-4">
+                            {passwordError}
                         </div>
                     )}
-                    {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg mb-4">
-                            {success}
+                    {passwordSuccess && (
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-xl text-sm mb-4">
+                            {passwordSuccess}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Email
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Текущий пароль
                             </label>
                             <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
+                                type="password"
+                                name="old_password"
+                                value={passwordData.old_password}
+                                onChange={handlePasswordChange}
+                                className="input"
+                                required
                             />
-                            <p className="text-xs text-gray-400 mt-1">Email нельзя изменить</p>
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Имя пользователя
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Новый пароль
                             </label>
                             <input
-                                type="text"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                type="password"
+                                name="new_password"
+                                value={passwordData.new_password}
+                                onChange={handlePasswordChange}
+                                className="input"
+                                required
+                                minLength="6"
                             />
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                О себе
-                            </label>
-                            <textarea
-                                name="bio"
-                                value={formData.bio}
-                                onChange={handleChange}
-                                rows="4"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                placeholder="Расскажите о себе, своих кулинарных предпочтениях..."
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Город
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Подтверждение нового пароля
                             </label>
                             <input
-                                type="text"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                placeholder="Москва, Санкт-Петербург..."
+                                type="password"
+                                name="confirm_password"
+                                value={passwordData.confirm_password}
+                                onChange={handlePasswordChange}
+                                className="input"
+                                required
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Сайт или соцсеть
-                            </label>
-                            <input
-                                type="url"
-                                name="website"
-                                value={formData.website}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                placeholder="https://..."
-                            />
-                        </div>
-
-                        <div className="flex gap-4 pt-4">
-                            <button
-                                type="submit"
-                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                            >
-                                Сохранить
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => navigate('/profile')}
-                                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-                            >
-                                Отмена
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            disabled={passwordLoading}
+                            className="btn-primary"
+                        >
+                            {passwordLoading ? 'Сохранение...' : 'Сменить пароль'}
+                        </button>
                     </form>
+                </div>
+
+                {/* Уведомления (заглушка) */}
+                <div className="card p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        🔔 Уведомления
+                    </h2>
+                    <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 text-center text-gray-500 dark:text-gray-400">
+                        <p className="text-sm">🚧 Раздел в разработке</p>
+                        <p className="text-xs mt-1">Скоро здесь будут настройки уведомлений</p>
+                    </div>
+                </div>
+
+                {/* О сайте */}
+                <div className="card p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        ℹ️ О сайте
+                    </h2>
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                        <p><span className="font-medium">Название:</span> Recartly</p>
+                        <p><span className="font-medium">Версия:</span> 1.0.0</p>
+                        <p><span className="font-medium">Описание:</span> Платформа для обмена рецептами, продуктовыми корзинами и отзывами</p>
+                        <p><span className="font-medium">Контакты:</span> support@recartly.ru</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                            © 2026 Recartly. Все права защищены.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Назад */}
+                <div className="mt-6">
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="btn-secondary"
+                    >
+                        ← Назад в профиль
+                    </button>
                 </div>
             </div>
         </div>

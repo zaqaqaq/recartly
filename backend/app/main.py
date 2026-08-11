@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from app.api.routes import auth_router, recipes_router, favorites_router, comments_router, profile_router, carts_router
+from app.api.routes import auth_router, recipes_router, favorites_router, comments_router, profile_router, carts_router, reviews_router
 
 app = FastAPI(title="Recartly API", version="1.0.0")
 
@@ -22,6 +22,7 @@ app.include_router(favorites_router)
 app.include_router(comments_router)
 app.include_router(profile_router)
 app.include_router(carts_router)
+app.include_router(reviews_router)
 
 # Раздаём статические файлы (фото)
 uploads_dir = "uploads"
