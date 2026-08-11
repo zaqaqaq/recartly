@@ -18,7 +18,7 @@ def test_positiv_auth(page):
     page.fill('.input','1@test.ru')
     page.fill('input[type="password"]','1234567')
     page.click('.btn-primary')
-    assert page.url == "http://localhost:3000/login"
+    assert page.url == "http://localhost:3000/"
 
 def test_logout(page):
     """проверка входа и выхода из системы"""
@@ -26,7 +26,7 @@ def test_logout(page):
     page.fill('.input','1@test.ru')
     page.fill('input[type="password"]','1234567')
     page.click('.btn-primary')
-    page.locator('.hidden').click()
+    page.locator('text=Den4ik').click()
     page.click('.btn-danger')
     assert page.locator('a:has-text("Войти")')
 
