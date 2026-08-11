@@ -28,7 +28,7 @@ jobs:
       - name: Start Recartly (Docker Compose)
         run: |
           # Запускаем backend, db и redis (frontend не нужен для API-тестов)
-          docker compose up -d backend db redis
+          docker compose up -d backend frontend db redis
 
       - name: Wait for app
         run: sleep 10
