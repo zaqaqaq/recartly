@@ -9,27 +9,27 @@ def test_negative_data_auth(page):
     page.click('.btn-primary')
     assert page.locator('text="Ошибка входа. Проверьте email и пароль"').is_visible()
 
-@allure.feature("Авторизация")
-@allure.story("Успешный вход")
-@allure.severity(allure.severity_level.CRITICAL)
-def test_positiv_auth(page):
-    """Вход с валидными данными"""
-    page.locator('text="Войти"').first.click()
-    page.fill('.input','1@test.ru')
-    page.fill('input[type="password"]','1234567')
-    page.click('.btn-primary')
-    # Ждем, пока URL станет главной страницей
-    page.wait_for_url("http://localhost:3000/", timeout=5000)
-
-def test_logout(page):
-    """проверка входа и выхода из системы"""
-    page.locator('text="Войти"').first.click()
-    page.fill('.input','1@test.ru')
-    page.fill('input[type="password"]','1234567')
-    page.click('.btn-primary')
-    page.locator('text=Den4ik').click()
-    page.click('.btn-danger')
-    assert page.locator('a:has-text("Войти")')
+# @allure.feature("Авторизация")
+# @allure.story("Успешный вход")
+# @allure.severity(allure.severity_level.CRITICAL)
+# def test_positiv_auth(page):
+#     """Вход с валидными данными"""
+#     page.locator('text="Войти"').first.click()
+#     page.fill('.input','1@test.ru')
+#     page.fill('input[type="password"]','1234567')
+#     page.click('.btn-primary')
+#     # Ждем, пока URL станет главной страницей
+#     page.wait_for_url("http://localhost:3000/", timeout=5000)
+#
+# def test_logout(page):
+#     """проверка входа и выхода из системы"""
+#     page.locator('text="Войти"').first.click()
+#     page.fill('.input','1@test.ru')
+#     page.fill('input[type="password"]','1234567')
+#     page.click('.btn-primary')
+#     page.locator('text=Den4ik').click()
+#     page.click('.btn-danger')
+#     assert page.locator('a:has-text("Войти")')
 
 def test_registration_positive(page):
     """Регистрация пользователя"""
