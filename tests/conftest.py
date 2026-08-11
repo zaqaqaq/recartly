@@ -13,11 +13,15 @@ def config():
     """Загружает конфиг из config/config.json"""
     return load_json('config/config.json')
 
+
+# Определяем, запущены ли тесты в CI (GitHub Actions)
+IS_CI = os.getenv("CI") == "true"
+
 @pytest.fixture
 def page(config):
-    """Открывает браузер и возвращает страницу"""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=300)
+        # В CI — headless, локально — с браузером
+        browser = p.chromium.launch(headless=IS_CI, slow_mo=300)
         page = browser.new_page()
         page.goto(config["base_url"])
         yield page
