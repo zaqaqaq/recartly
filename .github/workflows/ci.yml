@@ -46,17 +46,16 @@ jobs:
 
       - name: Generate Allure report
         run: |
-          cd backend
           allure generate allure-results -o allure-report --clean
 
       - name: Upload Allure results (raw data)
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: backend/allure-results
+          path: allure-results
 
       - name: Upload Allure report (HTML)
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: backend/allure-report
+          path: allure-report
