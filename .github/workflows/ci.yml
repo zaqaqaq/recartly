@@ -21,6 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd backend
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
@@ -32,6 +33,7 @@ jobs:
 
       - name: Run tests with Allure
         run: |
+          cd backend
           pytest tests/ --alluredir=allure-results -v
 
       - name: Install Allure CLI
@@ -42,16 +44,17 @@ jobs:
 
       - name: Generate Allure report
         run: |
+          cd backend
           allure generate allure-results -o allure-report --clean
 
       - name: Upload Allure results (raw data)
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: allure-results
+          path: backend/allure-results
 
       - name: Upload Allure report (HTML)
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: allure-report
+          path: backend/allure-report
