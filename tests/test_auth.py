@@ -20,7 +20,6 @@ def test_positiv_auth(page):
     page.click('.btn-primary')
     # Ждем, пока URL станет главной страницей
     page.wait_for_url("http://localhost:3000/", timeout=5000)
-    assert page.url == "http://localhost:3000/"
 
 def test_logout(page):
     """проверка входа и выхода из системы"""
