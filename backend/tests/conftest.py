@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 
-# Добавляем корневую папку в путь (чтобы импортировать utils)
+# Добавляем backend в путь (чтобы импортировать pages)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from playwright.sync_api import sync_playwright
