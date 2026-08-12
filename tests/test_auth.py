@@ -41,38 +41,30 @@ import time
 
 
 def test_logout(page):
-    # Генерируем уникальный email на основе времени
-    unique_suffix = str(int(time.time()))[-6:]
-    email = f"logout_{unique_suffix}@test.ru"
-    username = f"LogoutUser_{unique_suffix}"
+    """проверка входа и выхода из системы"""
 
-    # 1. Регистрация
+    # 1. Вход с существующим пользователем
     page.locator('text="Войти"').first.click()
-    page.click('text="Зарегистрируйтесь"')
-    page.fill('input[type="email"]', email)
-    page.fill('input[type="password"]', 'logout123')
-    page.locator('input[type="text"]').nth(1).fill(username)
-    page.locator('text="Зарегистрироваться"').click()
-
-    # 2. Проверяем регистрацию
-    page.wait_for_timeout(2000)
-    assert "login" in page.url or page.url == "http://localhost:3000/", \
-        f"Регистрация не удалась, текущий URL: {page.url}"
-
-    # 3. Вход
-    page.locator('text="Войти"').first.click()
-    page.fill('.input', email)
-    page.fill('input[type="password"]', 'logout123')
+    page.fill('.input', '1@test.ru')
+    page.fill('input[type="password"]', '1234567')
     page.click('.btn-primary')
 
-    # 4. Проверяем вход
+    # 2. Ждем редиректа на главную
     page.wait_for_timeout(2000)
-    assert page.locator(f'text={username}').is_visible(), \
-        f"Не удалось войти с {email}, текущий URL: {page.url}"
 
-    # 5. Выход
-    page.locator('a[href="/profile"]').click()
+    # 3. Проверяем, что вошли (имя Den4ik в шапке)
+    assert page.locator('span.hidden.sm\\:inline').is_visible(), \
+        f"Не удалось найти имя пользователя, текущий URL: {page.url}"
+
+    # 4. Клик по имени (открываем меню)
+    page.locator('span.hidden.sm\\:inline').click()
+
+    # 5. Клик по "Выйти" (в меню)
     page.locator('text=Выйти').click()
+
+    # 6. Проверяем, что вышли (кнопка "Войти" появилась)
+    page.wait_for_selector('text=Войти', timeout=5000)
+    assert page.locator('text=Войти').first.is_visible(), "Не удалось выйти"
 
 
 def test_registration_positive(page):
