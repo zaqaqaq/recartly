@@ -15,7 +15,6 @@ def test_positiv_auth(page):
     """Вход с валидными данными - ОТЛАДКА"""
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("test7@mail.ru", "Тестик7", "123456")
     login_page.login("1@test.ru", "1234567")
 
     # 1. Ждем 3 секунды, чтобы все точно прогрузилось
@@ -28,14 +27,13 @@ def test_logout(page):
     """Вход и выход"""
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("testtt@mail.ru", "Тестик99", "123456")
     login_page.login("1@test.ru", "1234567")
-    assert page.locator('text="Тестик99"').first.is_visible()
+    assert page.locator('text="Den4ik"').first.is_visible()
     login_page.logout()
 
 def test_registration_positive(page):
     """Проверка валидной регистрации"""
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("test87@mail.ru", "Тестикаа","123456")
+    login_page.registration_positive("test311@mail.ru", "Тестик2","123456")
 
