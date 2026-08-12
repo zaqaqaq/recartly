@@ -37,34 +37,41 @@ def test_positiv_auth(page):
     assert True
 
 
-def test_logout(page):
-    """проверка входа и выхода из системы"""
+import time
 
-    # 1. Регистрация нового пользователя
+
+def test_logout(page):
+    # Генерируем уникальный email на основе времени
+    unique_suffix = str(int(time.time()))[-6:]
+    email = f"logout_{unique_suffix}@test.ru"
+    username = f"LogoutUser_{unique_suffix}"
+
+    # 1. Регистрация
     page.locator('text="Войти"').first.click()
     page.click('text="Зарегистрируйтесь"')
-    page.fill('input[type="email"]', 'logout@test.ru')
+    page.fill('input[type="email"]', email)
     page.fill('input[type="password"]', 'logout123')
-    page.locator('input[type="text"]').nth(1).fill('LogoutUser')
+    page.locator('input[type="text"]').nth(1).fill(username)
     page.locator('text="Зарегистрироваться"').click()
 
-    # 2. Ждем завершения регистрации
-    page.wait_for_timeout(1000)
+    # 2. Проверяем регистрацию
+    page.wait_for_timeout(2000)
+    assert "login" in page.url or page.url == "http://localhost:3000/", \
+        f"Регистрация не удалась, текущий URL: {page.url}"
 
-    # 3. Вход с созданным пользователем
+    # 3. Вход
     page.locator('text="Войти"').first.click()
-    page.fill('.input', 'logout@test.ru')
+    page.fill('.input', email)
     page.fill('input[type="password"]', 'logout123')
     page.click('.btn-primary')
 
-    # 4. Ждем и проверяем, что вошли
+    # 4. Проверяем вход
     page.wait_for_timeout(2000)
-    assert page.locator('text=LogoutUser').is_visible(), "Не удалось войти с logout@test.ru"
+    assert page.locator(f'text={username}').is_visible(), \
+        f"Не удалось войти с {email}, текущий URL: {page.url}"
 
-    # 5. Клик по ссылке профиля (открываем меню)
+    # 5. Выход
     page.locator('a[href="/profile"]').click()
-
-    # 6. Клик по "Выйти"
     page.locator('text=Выйти').click()
 
 
