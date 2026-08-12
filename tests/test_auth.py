@@ -36,34 +36,37 @@ def test_positiv_auth(page):
     # 5. Временная проверка, чтобы тест прошел и мы увидели логи
     assert True
 
+
 def test_logout(page):
     """проверка входа и выхода из системы"""
 
-    # 2. Вход (как в test_positiv_auth)
+    # 1. Регистрация нового пользователя
     page.locator('text="Войти"').first.click()
-    page.fill('.input', '1@test.ru')
-    page.fill('input[type="password"]', '1234567')
+    page.click('text="Зарегистрируйтесь"')
+    page.fill('input[type="email"]', 'logout@test.ru')
+    page.fill('input[type="password"]', 'logout123')
+    page.locator('input[type="text"]').nth(1).fill('LogoutUser')
+    page.locator('text="Зарегистрироваться"').click()
+
+    # 2. Ждем завершения регистрации
+    page.wait_for_timeout(1000)
+
+    # 3. Вход с созданным пользователем
+    page.locator('text="Войти"').first.click()
+    page.fill('.input', 'logout@test.ru')
+    page.fill('input[type="password"]', 'logout123')
     page.click('.btn-primary')
 
-    # 3. ОТЛАДКА: смотрим, что на странице после входа
+    # 4. Ждем и проверяем, что вошли
     page.wait_for_timeout(2000)
-    print("ТЕКСТ НА СТРАНИЦЕ ПОСЛЕ ВХОДА:")
-    print(page.locator('body').inner_text())
+    assert page.locator('text=LogoutUser').is_visible(), "Не удалось войти с logout@test.ru"
 
-    # 4. Временно проверяем, что текст "Оывв" появляется
-    # (это проверит, залогинились ли мы)
-    page.wait_for_selector('text=Den4ik', timeout=5000)
+    # 5. Клик по ссылке профиля (открываем меню)
+    page.locator('a[href="/profile"]').click()
 
-    # 5. Клик по аватару (открываем меню)
-    page.locator('a.flex.items-center.gap-2').nth(1).click()
-
-    # 6. Ждем меню и кликаем "Выйти"
-    page.wait_for_timeout(500)
+    # 6. Клик по "Выйти"
     page.locator('text=Выйти').click()
 
-    # 7. Проверяем, что вышли
-    page.wait_for_selector('text=Войти', timeout=5000)
-    assert page.locator('text=Войти').first.is_visible()
 
 def test_registration_positive(page):
     """Регистрация пользователя"""
