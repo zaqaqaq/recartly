@@ -45,14 +45,32 @@ def test_logout(page):
     page.locator('input[type="text"]').nth(1).fill('Оывв')
     page.locator('text="Зарегистрироваться"').click()
 
+    # 2. Вход (как в test_positiv_auth)
     page.locator('text="Войти"').first.click()
-    page.fill('.input','dsff@mail.ru')
-    page.fill('input[type="password"]','123456')
+    page.fill('.input', 'dsff@mail.ru')
+    page.fill('input[type="password"]', '123456')
     page.click('.btn-primary')
-    page.locator('.flex')
-    page.click('text="Оывв"')
-    page.click('.btn-danger')
-    assert page.locator('a:has-text("Войти")')
+
+    # 3. ОТЛАДКА: смотрим, что на странице после входа
+    page.wait_for_timeout(2000)
+    print("ТЕКСТ НА СТРАНИЦЕ ПОСЛЕ ВХОДА:")
+    print(page.locator('body').inner_text())
+
+    # 4. Временно проверяем, что текст "Оывв" появляется
+    # (это проверит, залогинились ли мы)
+    page.wait_for_selector('text=Оывв', timeout=5000)
+    assert page.locator('text=Оывв').is_visible()
+
+    # 5. Клик по аватару (открываем меню)
+    page.locator('a.flex.items-center.gap-2').nth(1).click()
+
+    # 6. Ждем меню и кликаем "Выйти"
+    page.wait_for_timeout(500)
+    page.locator('text=Выйти').click()
+
+    # 7. Проверяем, что вышли
+    page.wait_for_selector('text=Войти', timeout=5000)
+    assert page.locator('text=Войти').first.is_visible()
 
 def test_registration_positive(page):
     """Регистрация пользователя"""
