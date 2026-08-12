@@ -41,8 +41,8 @@ def test_logout(page):
 
     # 2. Вход (как в test_positiv_auth)
     page.locator('text="Войти"').first.click()
-    page.fill('.input', 'dsff@mail.ru')
-    page.fill('input[type="password"]', '123456')
+    page.fill('.input', '1@test.ru')
+    page.fill('input[type="password"]', '1234567')
     page.click('.btn-primary')
 
     # 3. ОТЛАДКА: смотрим, что на странице после входа
@@ -52,7 +52,7 @@ def test_logout(page):
 
     # 4. Временно проверяем, что текст "Оывв" появляется
     # (это проверит, залогинились ли мы)
-    page.wait_for_selector('text=Оывв', timeout=5000)
+    page.wait_for_selector('text=Den4ik', timeout=5000)
 
     # 5. Клик по аватару (открываем меню)
     page.locator('a.flex.items-center.gap-2').nth(1).click()
