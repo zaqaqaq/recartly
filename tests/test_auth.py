@@ -36,15 +36,23 @@ def test_positiv_auth(page):
     # 5. Временная проверка, чтобы тест прошел и мы увидели логи
     assert True
 
-# def test_logout(page):
-#     """проверка входа и выхода из системы"""
-#     page.locator('text="Войти"').first.click()
-#     page.fill('.input','1@test.ru')
-#     page.fill('input[type="password"]','1234567')
-#     page.click('.btn-primary')
-#     page.locator('text=Den4ik').click()
-#     page.click('.btn-danger')
-#     assert page.locator('a:has-text("Войти")')
+def test_logout(page):
+    """проверка входа и выхода из системы"""
+    page.locator('text="Войти"').first.click()
+    page.click('text="Зарегистрируйтесь"')
+    page.fill('input[type="email"]', 'dsff@mail.ru')
+    page.fill('input[type="password"]', '123456')
+    page.locator('input[type="text"]').nth(1).fill('Оывв')
+    page.locator('text="Зарегистрироваться"').click()
+
+    page.locator('text="Войти"').first.click()
+    page.fill('.input','dsff@mail.ru')
+    page.fill('input[type="password"]','123456')
+    page.click('.btn-primary')
+    page.locator('.flex')
+    page.click('text="Оывв"')
+    page.click('.btn-danger')
+    assert page.locator('a:has-text("Войти")')
 
 def test_registration_positive(page):
     """Регистрация пользователя"""
