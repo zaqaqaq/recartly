@@ -39,30 +39,50 @@ def test_positiv_auth(page):
 
 import time
 
+import time
+
 
 def test_logout(page):
     """проверка входа и выхода из системы"""
 
-    # 1. Вход с существующим пользователем
-    page.locator('text="Войти"').first.click()
-    page.fill('.input', '1@test.ru')
-    page.fill('input[type="password"]', '1234567')
-    page.click('.btn-primary')
+    # Генерируем уникальные данные
+    unique_suffix = str(int(time.time()))[-6:]
+    email = f"logout_{unique_suffix}@test.ru"
+    username = f"LogoutUser_{unique_suffix}"
+    password = "logout123"
 
-    # 2. Ждем редиректа на главную
+    # 1. Регистрация нового пользователя
+    page.locator('text="Войти"').first.click()
+    page.click('text="Зарегистрируйтесь"')
+    page.fill('input[type="email"]', email)
+    page.fill('input[type="password"]', password)
+    page.locator('input[type="text"]').nth(1).fill(username)
+    page.locator('text="Зарегистрироваться"').click()
+
+    # 2. Ждем завершения регистрации
     page.wait_for_timeout(2000)
 
-    # 3. Проверяем, что вошли (имя Den4ik в шапке)
-    assert page.locator('span.hidden.sm\\:inline').is_visible(), \
-        f"Не удалось найти имя пользователя, текущий URL: {page.url}"
+    # Если после регистрации редирект на логин — кликаем "Войти"
+    if "login" in page.url:
+        page.locator('text="Войти"').first.click()
 
-    # 4. Клик по имени (открываем меню)
-    page.locator('span.hidden.sm\\:inline').click()
+    # 3. Вход с созданным пользователем
+    page.fill('.input', email)
+    page.fill('input[type="password"]', password)
+    page.click('.btn-primary')
 
-    # 5. Клик по "Выйти" (в меню)
+    # 4. Ждем и проверяем, что вошли
+    page.wait_for_timeout(2000)
+    assert page.locator(f'text={username}').is_visible(), \
+        f"Не удалось войти с {email}, текущий URL: {page.url}"
+
+    # 5. Клик по имени (открываем меню)
+    page.locator(f'text={username}').click()
+
+    # 6. Клик по "Выйти"
     page.locator('text=Выйти').click()
 
-    # 6. Проверяем, что вышли (кнопка "Войти" появилась)
+    # 7. Проверяем, что вышли
     page.wait_for_selector('text=Войти', timeout=5000)
     assert page.locator('text=Войти').first.is_visible(), "Не удалось выйти"
 
