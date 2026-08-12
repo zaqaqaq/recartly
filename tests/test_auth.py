@@ -45,47 +45,29 @@ import time
 def test_logout(page):
     """проверка входа и выхода из системы"""
 
-    # Генерируем уникальные данные
-    unique_suffix = str(int(time.time()))[-6:]
-    email = f"logout_{unique_suffix}@test.ru"
-    username = f"LogoutUser_{unique_suffix}"
-    password = "logout123"
-
-    # 1. Регистрация нового пользователя
+    # 1. Вход с существующим пользователем (как в test_positiv_auth)
     page.locator('text="Войти"').first.click()
-    page.click('text="Зарегистрируйтесь"')
-    page.fill('input[type="email"]', email)
-    page.fill('input[type="password"]', password)
-    page.locator('input[type="text"]').nth(1).fill(username)
-    page.locator('text="Зарегистрироваться"').click()
-
-    # 2. Ждем завершения регистрации
-    page.wait_for_timeout(2000)
-
-    # Если после регистрации редирект на логин — кликаем "Войти"
-    if "login" in page.url:
-        page.locator('text="Войти"').first.click()
-
-    # 3. Вход с созданным пользователем
-    page.fill('.input', email)
-    page.fill('input[type="password"]', password)
+    page.fill('.input', '1@test.ru')
+    page.fill('input[type="password"]', '1234567')
     page.click('.btn-primary')
 
-    # 4. Ждем и проверяем, что вошли
+    # 2. Ждем редиректа на главную
     page.wait_for_timeout(2000)
-    assert page.locator(f'text={username}').is_visible(), \
-        f"Не удалось войти с {email}, текущий URL: {page.url}"
 
-    # 5. Клик по имени (открываем меню)
-    page.locator(f'text={username}').click()
+    # 3. Проверяем, что вошли (имя Den4ik в шапке)
+    # Используем любой селектор, который находит имя
+    assert page.locator('text=Den4ik').first.is_visible(), \
+        f"Не удалось войти, текущий URL: {page.url}"
 
-    # 6. Клик по "Выйти"
+    # 4. Клик по имени (открываем меню)
+    page.locator('text=Den4ik').first.click()
+
+    # 5. Клик по "Выйти" (в меню)
     page.locator('text=Выйти').click()
 
-    # 7. Проверяем, что вышли
+    # 6. Проверяем, что вышли (кнопка "Войти" появилась)
     page.wait_for_selector('text=Войти', timeout=5000)
     assert page.locator('text=Войти').first.is_visible(), "Не удалось выйти"
-
 
 def test_registration_positive(page):
     """Регистрация пользователя"""
