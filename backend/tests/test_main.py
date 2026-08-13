@@ -1,8 +1,17 @@
+from backend.pages.login_page import LoginPage
+from backend.pages.main_page import MainPage
+
+
 def test_main_opens(page):
     """Проверка открытия главной страницы"""
-    assert page.locator('text="Готовьте с умом, экономьте с нами"').is_visible()
+    main_page = MainPage(page)
+    login_page = LoginPage(page)
+    login_page.navigate()
+    login_page.login("1@test.ru", "1234567")
+    main_page.main_open()
 
 def test_auth_main(page):
     """Проверка кнопки войти"""
-    page.locator('text=Войти').first.click()
+    main_page = MainPage(page)
+    main_page.auth_main()
 
