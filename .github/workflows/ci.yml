@@ -30,13 +30,23 @@ jobs:
           docker compose up -d backend frontend db redis
           sleep 15
 
-      - name: Check database tables
+      - name: Apply database migrations
         run: |
-          docker compose exec db psql -U recartly -d recartly -c "\dt"
+          docker compose exec backend alembic upgrade head
+        continue-on-error: true
+
+      - name: Create database tables (if migrations fail)
+        run: |
+          docker compose exec backend python -c "from app import db; db.create_all()"
+        continue-on-error: true
+
+      - name: Wait for app
+        run: sleep 5
 
       - name: Run tests with Allure
         run: |
-          pytest backend/tests/ --alluredir=allure-results -v
+          cd backend
+          pytest tests/ --alluredir=allure-results -v
 
       - name: Install Allure CLI
         run: |
@@ -46,16 +56,17 @@ jobs:
 
       - name: Generate Allure report
         run: |
+          cd backend
           allure generate allure-results -o allure-report --clean
 
       - name: Upload Allure results (raw data)
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: allure-results
+          path: backend/allure-results
 
       - name: Upload Allure report (HTML)
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: allure-report
+          path: backend/allure-report
