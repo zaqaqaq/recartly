@@ -77,5 +77,6 @@ def test_registration_positive(page):
     register_page = RegisterPage(page)
     login_page = LoginPage(page)
     login_page.navigate()
-    register_page.registration_positive("testk@mail.ru", "Тести","123459")
+    register_page.navigate()  # ← переходим на регистрацию
+    register_page.register("new_user@mail.ru", "NewPass123", "NewUser")  # ← используем метод register()
 

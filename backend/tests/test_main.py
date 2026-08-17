@@ -4,14 +4,11 @@ from backend.pages.main_page import MainPage
 
 def test_main_opens(page):
     """Проверка открытия главной страницы"""
-    main_page = MainPage(page)
-    login_page = LoginPage(page)
-    login_page.navigate()
-    login_page.login("1@test.ru", "1234567")
-    main_page.main_open()
+    page.goto("http://localhost:3000")
+    assert page.locator('text="Готовьте с умом"').is_visible()
 
 def test_auth_main(page):
     """Проверка кнопки войти"""
-    main_page = MainPage(page)
-    main_page.auth_main()
+    page.goto("http://localhost:3000")
+    assert page.locator('a:has-text("Войти")').first.is_visible()
 

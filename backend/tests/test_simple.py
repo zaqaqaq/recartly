@@ -1,5 +1,5 @@
 from playwright.sync_api import sync_playwright
-
+import time
 
 def test_open_page():
     with sync_playwright() as p:
@@ -50,26 +50,17 @@ def test_click_login(page):
 
 def test_register_only(page):
     """Проверяем только регистрацию"""
+    unique_email = f"test_{int(time.time())}@mail.ru"
+
     page.goto("http://localhost:3000/login")
-
-    # Кликаем "Зарегистрируйтесь"
     page.locator('a:has-text("Зарегистрируйтесь")').click()
-
-    # Заполняем форму
-    page.fill('input[type="email"]', 'test_register@mail.ru')
+    page.fill('input[type="email"]', unique_email)
     page.fill('input[type="password"]', 'Test123456')
     page.locator('input[type="text"]').nth(1).fill('TestUser')
-
-    # Нажимаем кнопку
     page.locator('button:has-text("Зарегистрироваться")').click()
 
-    # Ждем и проверяем результат
     page.wait_for_timeout(2000)
-    print("URL после регистрации:", page.url)
-    print("Текст страницы:", page.locator('body').inner_text())
-
-    # Проверяем, что мы на странице логина (или есть сообщение об успехе)
-    assert "login" in page.url or "успешно" in page.locator('body').inner_text()
+    assert "login" in page.url, "Регистрация не удалась"
 
 
 def test_logout_button_exists(page):
