@@ -27,17 +27,22 @@ jobs:
 
       - name: Start Recartly (Docker Compose)
         run: |
-          docker compose up -d backend frontend db redis
+          docker compose up -d db redis
+          sleep 5
+          docker compose up -d backend frontend
           sleep 15
 
-      - name: Apply database migrations
+      - name: Create database tables
         run: |
-          docker compose exec backend alembic upgrade head
-        continue-on-error: true
-
-      - name: Create database tables (if migrations fail)
-        run: |
-          docker compose exec backend python -c "from app import db; db.create_all()"
+          docker compose exec backend python -c "
+            import sys
+            sys.path.append('/app')
+            from app import create_app, db
+            app = create_app()
+            with app.app_context():
+              db.create_all()
+              print('✅ Таблицы созданы')
+            "
         continue-on-error: true
 
       - name: Wait for app
