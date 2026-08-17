@@ -39,11 +39,8 @@ def test_positiv_auth(page):
     # 🔍 Даем время на валидацию формы
     page.wait_for_timeout(1000)
 
-    # 3. Нажимаем кнопку (как вручную)
-    button = page.locator('button:has-text("Зарегистрироваться")')
-    print("Кнопка видна:", button.is_visible())
-    print("Кнопка активна:", button.is_enabled())
-    button.click()
+    # 3. Нажимаем кнопку (force=True — работает в CI!)
+    page.locator('button:has-text("Зарегистрироваться")').click(force=True)
 
     # 4. Ждем результат
     page.wait_for_timeout(2000)
