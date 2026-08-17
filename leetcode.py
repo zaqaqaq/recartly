@@ -68,12 +68,25 @@ def fizz_buzz(n):
 
 print(fizz_buzz(10))
 
-# #Дана строка s, содержащая только символы: '(', ')', '{', '}', '[', ']'.
-# Определи, является ли строка корректной (валидной).
-#
-# Условия валидности:
-#
-# Открывающая скобка должна закрываться такой же закрывающей скобкой.
-#
-# Скобки должны закрываться в правильном порядке (вложенность).
+# Дан список prices, где prices[i] — цена акции в день i.
+# Нужно найти максимальную прибыль, которую можно получить, купив акцию в один день и продав в другой (более поздний).
+# Если прибыль невозможна — верни 0.
 
+prices = [7, 1, 5, 3, 6, 4]
+
+def max_prices(prices):
+    min_price = prices[0]
+    max_price = 0
+    profit = 0
+    for i in range(len(prices)):
+        if prices[i] < min_price:
+            min_price = prices[i]
+
+        profit = prices[i] - min_price
+
+        if profit > max_price:
+            max_price = profit
+    return max_price
+
+
+print(max_prices(prices))

@@ -1,5 +1,5 @@
 import allure
-from ..pages.login_page import LoginPage
+from ..pages.login_page import LoginPage, RegisterPage
 
 
 def test_negative_auth(page):
@@ -15,27 +15,26 @@ def test_positiv_auth(page):
     """Вход с валидными данными - ОТЛАДКА"""
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("test667@mail.ru", "Тести", "123456")
-    login_page.login("test667@mail.ru", "123456")
+    login_page.login("1@test.ru", "1234567")
 
     # 1. Ждем 3 секунды, чтобы все точно прогрузилось
     page.wait_for_timeout(3000)
 
     # 5. Проверяем, что вошли
-    assert page.locator('text=Тести').first.is_visible()
+    assert page.locator('text=Den4ik').first.is_visible()
 
 def test_logout(page):
     """Вход и выход"""
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("test669@mail.ru", "Тестиик", "123456")
-    login_page.login("test669@mail.ru", "123456")
-    assert page.locator('text="Тестиик"').first.is_visible()
+    login_page.login("1@test.ru", "1234567")
+    assert page.locator('text="Den4ik"').first.is_visible()
     login_page.logout()
 
 def test_registration_positive(page):
     """Проверка валидной регистрации"""
+    register_page = RegisterPage(page)
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.registration_positive("test311@mail.ru", "Тестик2","123456")
+    register_page.registration_positive("testk@mail.ru", "Тести","123459")
 
