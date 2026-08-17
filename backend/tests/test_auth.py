@@ -1,5 +1,7 @@
 import allure
-from ..pages.login_page import LoginPage, RegisterPage
+from ..pages.login_page import LoginPage
+from ..pages.main_page import MainPage
+from ..pages.register_page import RegisterPage
 
 
 def test_negative_auth(page):
@@ -12,24 +14,63 @@ def test_negative_auth(page):
 
 
 def test_positiv_auth(page):
-    """Вход с валидными данными - ОТЛАДКА"""
+    """Вход с валидными данными (CI-ready)"""
+
+    EMAIL = 'test_register@mail.ru'
+    PASSWORD = 'Test123456'
+    USERNAME = 'TestUser'
+
+    # 1. Регистрация
+    register_page = RegisterPage(page)
+    register_page.navigate()
+    register_page.register(EMAIL, PASSWORD, USERNAME)
+
+    # 2. Переход на логин
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.login("1@test.ru", "1234567")
 
-    # 1. Ждем 3 секунды, чтобы все точно прогрузилось
-    page.wait_for_timeout(3000)
+    # 🔍 ОТЛАДКА: проверяем, что мы на странице логина
+    print("1. Текущий URL:", page.url)
 
-    # 5. Проверяем, что вошли
-    assert page.locator('text=Den4ik').first.is_visible()
+    # 3. Вход
+    login_page.login(EMAIL, PASSWORD)
+
+    # 🔍 ОТЛАДКА: что после клика?
+    page.wait_for_timeout(2000)
+    print("2. URL после входа:", page.url)
+    print("3. Текст страницы:", page.locator('body').inner_text()[:500])
+
+    # 4. Проверка
+    main_page = MainPage(page)
+    assert main_page.is_logged_in(), "Не удалось войти"
+
 
 def test_logout(page):
     """Вход и выход"""
+
+    EMAIL = 'test_register@mail.ru'
+    PASSWORD = 'Test123456'
+    USERNAME = 'TestUser'
+
+    # 1. Регистрация
+    register_page = RegisterPage(page)
+    register_page.navigate()
+    register_page.register(EMAIL, PASSWORD, USERNAME)
+
+    # 2. Вход
     login_page = LoginPage(page)
     login_page.navigate()
-    login_page.login("1@test.ru", "1234567")
-    assert page.locator('text="Den4ik"').first.is_visible()
-    login_page.logout()
+    login_page.login(EMAIL, PASSWORD)
+
+    # 3. Проверка входа
+    main_page = MainPage(page)
+    assert main_page.is_logged_in(), "Не удалось войти"
+
+    # 4. Выход
+    main_page.logout()
+
+    # 5. Проверка выхода
+    assert main_page.is_logged_out(), "Не удалось выйти"
 
 def test_registration_positive(page):
     """Проверка валидной регистрации"""
