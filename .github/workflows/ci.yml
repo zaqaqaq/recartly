@@ -34,7 +34,24 @@ jobs:
 
       - name: Create database tables
         run: |
-          docker compose exec backend python init_db.py
+          docker compose exec db psql -U recartly -d recartly -c "
+          CREATE TABLE IF NOT EXISTS users (
+              id SERIAL PRIMARY KEY,
+              email VARCHAR(120) UNIQUE NOT NULL,
+              username VARCHAR(80) UNIQUE NOT NULL,
+              password_hash VARCHAR(128) NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          CREATE TABLE IF NOT EXISTS recipes (
+              id SERIAL PRIMARY KEY,
+              title VARCHAR(100) NOT NULL,
+              description TEXT,
+              ingredients TEXT,
+              price INTEGER,
+              user_id INTEGER REFERENCES users(id),
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          "
         continue-on-error: true
 
       - name: Wait for app
