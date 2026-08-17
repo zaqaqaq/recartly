@@ -88,3 +88,52 @@ def test_logout_button_exists(page):
         print(f"  {i}: {btn.inner_text()}")
 
     assert len(logout_buttons) > 0, "Кнопка 'Выйти' не найдена"
+
+
+def test_register_debug(page):
+    """Отладка регистрации"""
+
+    unique_email = f"debug_{int(time.time())}@mail.ru"
+    print(f"🔍 Регистрируем: {unique_email}")
+
+    # 1. Переход на регистрацию
+    page.goto("http://localhost:3000/login")
+    page.locator('a:has-text("Зарегистрируйтесь")').click()
+
+    # 2. Заполняем форму
+    page.fill('input[type="email"]', unique_email)
+    page.fill('input[type="password"]', 'Test123456')
+    page.locator('input[type="text"]').nth(1).fill('TestUser')
+
+    # 3. Нажимаем кнопку
+    page.locator('button:has-text("Зарегистрироваться")').click()
+
+    # 4. Ждем и проверяем
+    page.wait_for_timeout(2000)
+    print("URL после регистрации:", page.url)
+    print("Текст страницы:", page.locator('body').inner_text()[:500])
+
+    assert "login" in page.url, "Регистрация не удалась"
+
+
+def test_register_selector_debug(page):
+    """Находит все поля на странице регистрации"""
+    page.goto("http://localhost:3000/login")
+    page.locator('a:has-text("Зарегистрируйтесь")').click()
+
+    # Ждем загрузки формы
+    page.wait_for_timeout(1000)
+
+    # Находим все поля ввода
+    inputs = page.locator('input').all()
+    print(f"🔍 Найдено полей ввода: {len(inputs)}")
+
+    for i, inp in enumerate(inputs):
+        print(
+            f"  {i}: type={inp.get_attribute('type')}, name={inp.get_attribute('name')}, id={inp.get_attribute('id')}")
+
+    # Находим все кнопки
+    buttons = page.locator('button').all()
+    print(f"🔍 Найдено кнопок: {len(buttons)}")
+    for i, btn in enumerate(buttons):
+        print(f"  {i}: text={btn.inner_text()}, type={btn.get_attribute('type')}")

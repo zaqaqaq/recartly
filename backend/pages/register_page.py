@@ -4,25 +4,20 @@ class RegisterPage:
         self.register_link = 'a:has-text("Зарегистрируйтесь")'
         self.email_input = 'input[type="email"]'
         self.password_input = 'input[type="password"]'
-        self.username_input = 'input[type="text"]'
+        self.username_input = 'input[type="text"]'  # все поля text
         self.submit_button = 'button:has-text("Зарегистрироваться")'
 
     def navigate(self):
-        """Переход на страницу регистрации через логин"""
-        # 1. Сначала открываем главную
-        self.page.goto("http://localhost:3000")
-
-        # 2. Кликаем на "Войти" (чтобы попасть на /login)
-        self.page.locator('a:has-text("Войти")').first.click()
-
-        # 3. Ждем, когда появится ссылка "Зарегистрируйтесь"
-        self.page.wait_for_selector(self.register_link, state="visible", timeout=5000)
-
-        # 4. Кликаем на "Зарегистрируйтесь"
+        self.page.goto("http://localhost:3000/login")
         self.page.locator(self.register_link).click()
+        # Ждем загрузки формы
+        self.page.wait_for_timeout(500)
 
     def register(self, email, password, username):
-        self.page.fill(self.email_input, email)
-        self.page.fill(self.password_input, password)
+        # Очищаем поля перед заполнением
+        self.page.locator(self.email_input).fill(email)
+        self.page.locator(self.password_input).fill(password)
+        # Берем второе поле type="text" (индекс 1)
         self.page.locator(self.username_input).nth(1).fill(username)
+        # Кликаем по кнопке
         self.page.locator(self.submit_button).click()
