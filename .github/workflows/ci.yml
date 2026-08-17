@@ -30,6 +30,10 @@ jobs:
           docker compose up -d backend frontend db redis
           sleep 15
 
+      - name: Check database tables
+        run: |
+          docker compose exec db psql -U recartly -d recartly -c "\dt"
+
       - name: Run tests with Allure
         run: |
           pytest backend/tests/ --alluredir=allure-results -v
