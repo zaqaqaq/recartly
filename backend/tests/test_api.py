@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import allure
 import requests
@@ -7,10 +9,12 @@ import requests
 @allure.story("Регистрация")
 def test_api_register():
     """Проверка регистрации через API"""
+
+    unique_email = f"api_test_{int(time.time())}@mail.ru"
     with allure.step("Отправить запрос на регистрацию"):
         response = requests.post("http://localhost:8000/auth/register", json={
-            "email": "12334@gmail.com",
-            "username": "приветпа",
+            "email": unique_email,
+            "username": "тест",
             "password": "123456"
         })
     with allure.step("Проверить статус ответа"):
